@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日存档点 · Daily Savepoint</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #2a2520;
+      --muted: #7b7167;
+      --line: #e5dccc;
+      --accent: #8b5e34;
+      --accent-soft: #f1dfc4;
+      --danger: #a6533f;
+      --shadow: rgba(84, 63, 43, 0.12);
+      --done: #6a7c59;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-serif, "Noto Serif SC", "Songti SC", Georgia, serif;
+      background:
+        radial-gradient(circle at top left, rgba(241, 223, 196, 0.85), transparent 32rem),
+        linear-gradient(135deg, #fbf7ef 0%, #f2eadf 100%);
+      color: var(--ink);
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 44px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .title p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .top-card {
+      background: rgba(255, 253, 248, 0.78);
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 45px var(--shadow);
+      border-radius: 24px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-bottom: 5px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 14px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(139, 94, 52, 0.12);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    aside, main {
+      background: rgba(255, 253, 248, 0.88);
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 45px var(--shadow);
+      border-radius: 28px;
+      overflow: hidden;
+    }
+
+    aside {
+      position: sticky;
+      top: 16px;
+      padding: 18px;
+    }
+
+    aside h2, main h2 {
+      margin: 0 0 14px;
+      font-size: 1.15rem;
+    }
+
+    .history {
+      display: grid;
+      gap: 8px;
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .history button {
+      border: 1px solid var(--line);
+      background: #fffaf0;
+      color: var(--ink);
+      border-radius: 14px;
+      padding: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .history button.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .history .small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
+
+    .side-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      border: 0;
+      background: var(--accent);
+      color: #fffdf8;
+      border-radius: 16px;
+      padding: 11px 14px;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn.secondary {
+      background: #fffaf0;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn.danger {
+      background: var(--danger);
+    }
+
+    main {
+      padding: 0;
+    }
+
+    .page-head {
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,250,240,0.95), rgba(255,253,248,0.86));
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: 0.38fr 0.62fr;
+      min-height: 570px;
+    }
+
+    .cue-col {
+      border-right: 1px solid var(--line);
+      padding: 22px;
+      background: rgba(255, 250, 240, 0.62);
+    }
+
+    .work-col {
+      padding: 22px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .task-group {
+      margin-bottom: 22px;
+    }
+
+    .task-group h3 {
+      font-size: 1rem;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 9px;
+      align-items: center;
+      background: #fffaf0;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 9px 10px;
+    }
+
+    .task input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--done);
+    }
+
+    .task input[type="text"] {
+      border: 0;
+      background: transparent;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .task.done input[type="text"] {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .delete-task {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.05rem;
+      padding: 4px;
+    }
+
+    .add-task {
+      border: 1px dashed var(--line);
+      background: transparent;
+      color: var(--accent);
+      border-radius: 14px;
+      padding: 8px 10px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .summary {
+      border-top: 1px solid var(--line);
+      padding: 22px;
+      background: rgba(255, 250, 240, 0.48);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 10;
+      font-size: 0.92rem;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 860px) {
+      header, .layout, .page-grid, .summary {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+      }
+
+      .cue-col {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+    }
+
+    @media print {
+      body { background: white; }
+      aside, nav, .side-actions, .add-task, .delete-task, .toast { display: none; }
+      .app { max-width: none; padding: 0; }
+      header, main { box-shadow: none; border: 0; }
+      .layout, .page-grid, .summary { display: block; }
+      .cue-col { border: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title">
+        <h1>每日存档点</h1>
+        <p>不是法庭，是存档。记录今天在哪里，明天从哪里继续。</p>
+      </div>
+      <div class="top-card">
+        <div class="date-row">
+          <div>
+            <label for="dateInput">日期</label>
+            <input id="dateInput" type="date" />
+          </div>
+          <div>
+            <label for="sleepInput">睡眠</label>
+            <input id="sleepInput" placeholder="例如：1:30 - 9:20" />
+          </div>
+        </div>
+        <div>
+          <label for="themeInput">今日主题</label>
+          <input id="themeInput" placeholder="例如：先启动，不审判；把注意力还给自己" />
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <h2>历史存档</h2>
+        <div id="history" class="history"></div>
+        <div class="side-actions">
+          <button class="btn" id="newTodayBtn">新建今天</button>
+          <button class="btn secondary" id="exportMdBtn">导出今日 Markdown</button>
+          <button class="btn secondary" id="exportJsonBtn">备份全部 JSON</button>
+          <button class="btn danger" id="clearDayBtn">清空今日</button>
+        </div>
+        <p class="hint">数据只保存在当前浏览器。换设备前，请先备份 JSON。</p>
+      </aside>
+
+      <main>
+        <div class="page-head">
+          <h2 id="pageTitle">今日页面</h2>
+          <div class="hint" id="progressText">完成 0 / 0</div>
+        </div>
+
+        <div class="page-grid">
+          <section class="cue-col">
+            <div class="field">
+              <label for="keywordsInput">今日关键词</label>
+              <textarea id="keywordsInput" placeholder="例如：启动困难 / 羡慕 / 稳住 / 手机不上床"></textarea>
+            </div>
+            <div class="field">
+              <label for="stateInput">状态</label>
+              <select id="stateInput">
+                <option value="">选择今天的状态</option>
+                <option>精力好</option>
+                <option>一般</option>
+                <option>困</option>
+                <option>焦虑</option>
+                <option>想逃</option>
+                <option>没感觉</option>
+                <option>已经开始往回拉</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="stuckInput">卡点</label>
+              <textarea id="stuckInput" placeholder="今天卡在哪里？不要审判，只定位。"></textarea>
+            </div>
+            <div class="field">
+              <label for="boundaryInput">边界提醒</label>
+              <textarea id="boundaryInput" placeholder="例如：今天不默认和别人一起做；不解释太多。"></textarea>
+            </div>
+            <div class="field">
+              <label for="tomorrowInput">明日接续点</label>
+              <textarea id="tomorrowInput" placeholder="明天打开后第一步做什么？"></textarea>
+            </div>
+          </section>
+
+          <section class="work-col">
+            <div class="task-group" data-group="must">
+              <h3>必须做 <span class="hint">1-3 个就够</span></h3>
+              <div class="task-list" id="mustList"></div>
+              <button class="add-task" data-add="must">+ 添加必须做</button>
+            </div>
+
+            <div class="task-group" data-group="should">
+              <h3>应该做</h3>
+              <div class="task-list" id="shouldList"></div>
+              <button class="add-task" data-add="should">+ 添加应该做</button>
+            </div>
+
+            <div class="task-group" data-group="could">
+              <h3>可以做</h3>
+              <div class="task-list" id="couldList"></div>
+              <button class="add-task" data-add="could">+ 添加可以做</button>
+            </div>
+
+            <div class="field">
+              <label for="notesInput">进行中记录</label>
+              <textarea id="notesInput" placeholder="随手记录今天推进过什么、想到什么、在哪里停下。"></textarea>
+            </div>
+          </section>
+        </div>
+
+        <section class="summary">
+          <div class="field">
+            <label for="doneInput">今天完成了什么？</label>
+            <textarea id="doneInput"></textarea>
+          </div>
+          <div class="field">
+            <label for="whyStuckInput">今天为什么卡住？</label>
+            <textarea id="whyStuckInput"></textarea>
+          </div>
+          <div class="field">
+            <label for="momentInput">今天值得保留的一个瞬间</label>
+            <textarea id="momentInput" placeholder="树、风、饭、一个想法、一个小小的完成。"></textarea>
+          </div>
+          <div class="field">
+            <label for="firstActionInput">明天的第一个动作</label>
+            <textarea id="firstActionInput" placeholder="不要写努力学习，要写具体动作。"></textarea>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">已保存</div>
+
+  <script>
+    const STORAGE_KEY = "daily-savepoint-v1";
+
+    const fields = [
+      "sleep", "theme", "keywords", "state", "stuck", "boundary", "tomorrow",
+      "notes", "done", "whyStuck", "moment", "firstAction"
+    ];
+
+    const taskGroups = ["must", "should", "could"];
+
+    let store = loadStore();
+    let currentDate = today();
+    let saveTimer = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    const elements = {
+      date: $("dateInput"),
+      history: $("history"),
+      pageTitle: $("pageTitle"),
+      progress: $("progressText"),
+      toast: $("toast")
+    };
+
+    function today() {
+      const d = new Date();
+      const offset = d.getTimezoneOffset();
+      const local = new Date(d.getTime() - offset * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function emptyDay() {
+      return {
+        sleep: "",
+        theme: "",
+        keywords: "",
+        state: "",
+        stuck: "",
+        boundary: "",
+        tomorrow: "",
+        notes: "",
+        done: "",
+        whyStuck: "",
+        moment: "",
+        firstAction: "",
+        tasks: {
+          must: [{ text: "", done: false }],
+          should: [{ text: "", done: false }],
+          could: [{ text: "", done: false }]
+        },
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function loadStore() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveStore(show = true) {
+      if (!store[currentDate]) return;
+      store[currentDate].updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      renderHistory();
+      renderProgress();
+      if (show) showToast("已保存");
+    }
+
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => saveStore(false), 250);
+    }
+
+    function ensureDay(date) {
+      if (!store[date]) store[date] = emptyDay();
+    }
+
+    function loadDay(date) {
+      currentDate = date;
+      ensureDay(currentDate);
+      elements.date.value = currentDate;
+      const day = store[currentDate];
+
+      fields.forEach((key) => {
+        const el = $(key + "Input");
+        if (el) el.value = day[key] || "";
+      });
+
+      renderTasks();
+      renderHistory();
+      renderProgress();
+      elements.pageTitle.textContent = `存档 · ${currentDate}`;
+    }
+
+    function syncFields() {
+      const day = store[currentDate];
+      fields.forEach((key) => {
+        const el = $(key + "Input");
+        if (el) day[key] = el.value;
+      });
+    }
+
+    function renderTasks() {
+      const day = store[currentDate];
+      taskGroups.forEach((group) => {
+        const list = $(group + "List");
+        list.innerHTML = "";
+        const tasks = day.tasks[group] || [];
+
+        tasks.forEach((task, index) => {
+          const row = document.createElement("div");
+          row.className = "task" + (task.done ? " done" : "");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = task.done;
+          checkbox.addEventListener("change", () => {
+            task.done = checkbox.checked;
+            row.classList.toggle("done", task.done);
+            saveStore(false);
+          });
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.placeholder = "写一个具体动作";
+          input.value = task.text;
+          input.addEventListener("input", () => {
+            task.text = input.value;
+            scheduleSave();
+          });
+
+          const del = document.createElement("button");
+          del.className = "delete-task";
+          del.type = "button";
+          del.textContent = "×";
+          del.title = "删除";
+          del.addEventListener("click", () => {
+            day.tasks[group].splice(index, 1);
+            if (day.tasks[group].length === 0) day.tasks[group].push({ text: "", done: false });
+            renderTasks();
+            saveStore();
+          });
+
+          row.append(checkbox, input, del);
+          list.appendChild(row);
+        });
+      });
+    }
+
+    function renderHistory() {
+      const dates = Object.keys(store).sort((a, b) => b.localeCompare(a));
+      elements.history.innerHTML = "";
+
+      if (dates.length === 0) {
+        elements.history.innerHTML = "<p class='hint'>暂无存档。</p>";
+        return;
+      }
+
+      dates.forEach((date) => {
+        const day = store[date];
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = date === currentDate ? "active" : "";
+        btn.innerHTML = `${date}<span class="small">${escapeHtml(day.theme || "未填写主题")}</span>`;
+        btn.addEventListener("click", () => loadDay(date));
+        elements.history.appendChild(btn);
+      });
+    }
+
+    function renderProgress() {
+      const day = store[currentDate];
+      const allTasks = taskGroups.flatMap((group) => day.tasks[group] || []).filter((task) => task.text.trim());
+      const doneCount = allTasks.filter((task) => task.done).length;
+      elements.progress.textContent = `完成 ${doneCount} / ${allTasks.length}`;
+    }
+
+    function exportMarkdown() {
+      syncFields();
+      saveStore(false);
+      const day = store[currentDate];
+      const lines = [];
+
+      lines.push(`# 每日存档点 · ${currentDate}`);
+      lines.push("");
+      lines.push(`- 睡眠：${day.sleep || ""}`);
+      lines.push(`- 今日主题：${day.theme || ""}`);
+      lines.push(`- 状态：${day.state || ""}`);
+      lines.push("");
+      lines.push("## 线索 / 卡点");
+      lines.push(`- 今日关键词：${day.keywords || ""}`);
+      lines.push(`- 卡点：${day.stuck || ""}`);
+      lines.push(`- 边界提醒：${day.boundary || ""}`);
+      lines.push(`- 明日接续点：${day.tomorrow || ""}`);
+      lines.push("");
+      lines.push("## 任务");
+      taskGroups.forEach((group) => {
+        const name = { must: "必须做", should: "应该做", could: "可以做" }[group];
+        lines.push(`### ${name}`);
+        (day.tasks[group] || []).filter((task) => task.text.trim()).forEach((task) => {
+          lines.push(`- [${task.done ? "x" : " "}] ${task.text}`);
+        });
+        lines.push("");
+      });
+      lines.push("## 进行中记录");
+      lines.push(day.notes || "");
+      lines.push("");
+      lines.push("## 今日复盘");
+      lines.push(`- 今天完成了：${day.done || ""}`);
+      lines.push(`- 今天为什么卡住：${day.whyStuck || ""}`);
+      lines.push(`- 值得保留的瞬间：${day.moment || ""}`);
+      lines.push(`- 明天的第一个动作：${day.firstAction || ""}`);
+
+      copyToClipboard(lines.join("\n"));
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `daily-savepoint-backup-${today()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("已下载 JSON 备份");
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("今日 Markdown 已复制");
+      } catch (error) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        showToast("今日 Markdown 已复制");
+      }
+    }
+
+    function showToast(text) {
+      elements.toast.textContent = text;
+      elements.toast.classList.add("show");
+      clearTimeout(elements.toast.timer);
+      elements.toast.timer = setTimeout(() => elements.toast.classList.remove("show"), 1300);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function attachEvents() {
+      elements.date.addEventListener("change", () => loadDay(elements.date.value));
+
+      fields.forEach((key) => {
+        const el = $(key + "Input");
+        if (!el) return;
+        el.addEventListener("input", () => {
+          syncFields();
+          scheduleSave();
+        });
+        el.addEventListener("change", () => {
+          syncFields();
+          saveStore(false);
+        });
+      });
+
+      document.querySelectorAll(".add-task").forEach((button) => {
+        button.addEventListener("click", () => {
+          const group = button.dataset.add;
+          store[currentDate].tasks[group].push({ text: "", done: false });
+          renderTasks();
+          saveStore(false);
+          const list = $(group + "List");
+          const lastInput = list.querySelector(".task:last-child input[type='text']");
+          if (lastInput) lastInput.focus();
+        });
+      });
+
+      $("newTodayBtn").addEventListener("click", () => loadDay(today()));
+      $("exportMdBtn").addEventListener("click", exportMarkdown);
+      $("exportJsonBtn").addEventListener("click", exportJson);
+      $("clearDayBtn").addEventListener("click", () => {
+        if (!confirm("确定清空今天的存档吗？")) return;
+        store[currentDate] = emptyDay();
+        loadDay(currentDate);
+        saveStore();
+      });
+    }
+
+    function init() {
+      ensureDay(currentDate);
+      attachEvents();
+      loadDay(currentDate);
+      saveStore(false);
+    }
+
+    init();
+  </script>
+</body>
+</html>
