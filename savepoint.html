@@ -608,6 +608,26 @@
             scheduleSave();
           });
 
+          input.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+
+            const tasks = day.tasks[group];
+            const nextTask = tasks[index + 1];
+
+            if (!nextTask) {
+              tasks.push({ text: "", done: false });
+              renderTasks();
+              saveStore(false);
+              const nextInput = $(group + "List").querySelector(".task:last-child input[type='text']");
+              if (nextInput) nextInput.focus();
+              return;
+            }
+
+            const nextInput = $(group + "List").querySelectorAll("input[type='text']")[index + 1];
+            if (nextInput) nextInput.focus();
+          });
+
           const del = document.createElement("button");
           del.className = "delete-task";
           del.type = "button";
